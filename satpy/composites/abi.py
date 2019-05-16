@@ -44,3 +44,12 @@ class SimulatedGreen(GenericCompositor):
         res.attrs = c03.attrs.copy()
 
         return super(SimulatedGreen, self).__call__((res,), **attrs)
+
+
+class LowCloud(GenericCompositor):
+    '''An RGB indicating the locations of low cloud at night'''
+    def __call__(self, projectables, optional_datasets=None, **attrs):
+        c07, c13 = self.check_areas(projectables)
+        res = c07 - c13
+        res.attrs = c07.attrs.copy()
+        return super(LowCloud, self).__call__((res,), **attrs)

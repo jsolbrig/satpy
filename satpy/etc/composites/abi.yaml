@@ -24,6 +24,13 @@ modifiers:
     - solar_zenith_angle
 
 composites:
+  low_cloud:
+    compositor: !!python/name:satpy.composites.abi.LowCloud
+    prerequisites:
+    - name: C07
+    - name: C13
+    standard_name: low_cloud
+
   green_crefl:
     compositor: !!python/name:satpy.composites.abi.SimulatedGreen
     # FUTURE: Set a wavelength...see what happens. Dependency finding
