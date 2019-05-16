@@ -57,6 +57,10 @@ def get_environ_ancpath(default='.'):
     return os.environ.get('SATPY_ANCPATH', default)
 
 
+def get_environ_extensions(default=None):
+    return os.environ.get('SATPY_EXTENSIONS', default)
+
+
 # FIXME: Old readers still use only this, but this may get updated by Scene
 CONFIG_PATH = get_environ_config_dir()
 
@@ -72,13 +76,17 @@ def config_search_paths(filename, *search_dirs, **kwargs):
     # Get the environment variable value every time (could be set dynamically)
     # FIXME: Consider removing the 'magic' environment variable all together
     CONFIG_PATH = get_environ_config_dir()
+    EXT_PATH = get_environ_extensions()
 
     paths = [filename, os.path.basename(filename)]
     paths += [os.path.join(search_dir, filename) for search_dir in search_dirs]
     # FUTURE: Remove CONFIG_PATH because it should be included as a search_dir
     paths += [os.path.join(CONFIG_PATH, filename),
               os.path.join(PACKAGE_CONFIG_PATH, filename)]
+    if EXT_PATH:
+        paths += [os.path.join(EXT_PATH, filename)]
     paths = [os.path.abspath(path) for path in paths]
+    print(paths)
 
     if kwargs.get("check_exists", True):
         paths = [x for x in paths if os.path.isfile(x)]
