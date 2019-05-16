@@ -78,7 +78,7 @@ for extra_deps in extras_require.values():
 extras_require['all'] = list(set(all_extras))
 
 
-def _config_data_files(base_dirs, extensions=(".cfg", )):
+def _config_data_files(base_dirs, extensions=(".cfg", ), out_dirs=None):
     """Find all subdirectory configuration files.
 
     Searches each base directory relative to this setup.py file and finds
@@ -90,16 +90,25 @@ def _config_data_files(base_dirs, extensions=(".cfg", )):
     """
     data_files = []
     pkg_root = os.path.realpath(os.path.dirname(__file__)) + "/"
-    for base_dir in base_dirs:
+
+    if out_dirs:
+        assert(len(out_dirs) == len(base_dirs))
+    else:
+        out_dirs = base_dirs
+
+    for base_dir, out_dir in zip(base_dirs, out_dirs):
         new_data_files = []
         for ext in extensions:
             configs = glob(os.path.join(pkg_root, base_dir, "*" + ext))
             configs = [c.replace(pkg_root, "") for c in configs]
             new_data_files.extend(configs)
-        data_files.append((base_dir, new_data_files))
+        data_files.append((out_dir, new_data_files))
 
     return data_files
 
+print(_config_data_files(['satpy/etc/composites', 'satpy/etc/enhancements'],
+                   ['.yaml'],
+                   ['etc/composites', 'etc/enhancmenets']))
 
 NAME = 'satpy'
 README = open('README.rst', 'r').read()
@@ -121,6 +130,9 @@ setup(name=NAME,
       url="https://github.com/pytroll/satpy",
       test_suite='satpy.tests.suite',
       packages=find_packages(),
+      data_files=_config_data_files(['satpy/etc/composites', 'satpy/etc/enhancements'],
+                                    ['.yaml'],
+                                    ['etc/composites', 'etc/enhancmenets']),
       package_data={'satpy': [os.path.join('etc', 'geo_image.cfg'),
                               os.path.join('etc', 'areas.yaml'),
                               os.path.join('etc', 'satpy.cfg'),
