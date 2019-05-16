@@ -6,6 +6,12 @@ enhancements:
     - name: stretch
       method: &stretchfun !!python/name:satpy.enhancements.stretch
       kwargs: {stretch: linear}
+  debra_dust:
+    standard_name: debra_dust
+    operations:
+    - name: debra_dust
+      method: !!python/name:satpy.enhancements.stretch
+      kwargs: {stretch: 'crude', min_stretch: 0.0, max_stretch: 1.0}
   reflectance_default:
     standard_name: toa_bidirectional_reflectance
     operations:
