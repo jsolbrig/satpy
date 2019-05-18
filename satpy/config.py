@@ -84,9 +84,8 @@ def config_search_paths(filename, *search_dirs, **kwargs):
     paths += [os.path.join(CONFIG_PATH, filename),
               os.path.join(PACKAGE_CONFIG_PATH, filename)]
     if EXT_PATH:
-        paths += [os.path.join(EXT_PATH, filename)]
+        paths += [os.path.join(ext, filename) for ext in EXT_PATH.split(':')]
     paths = [os.path.abspath(path) for path in paths]
-    print(paths)
 
     if kwargs.get("check_exists", True):
         paths = [x for x in paths if os.path.isfile(x)]
