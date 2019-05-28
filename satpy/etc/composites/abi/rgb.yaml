@@ -1,0 +1,59 @@
+composites:
+  low_cloud:
+    compositor: !!python/name:satpy.composites.abi.LowCloud
+    prerequisites:
+    - name: C07
+    - name: C13
+    standard_name: low_cloud
+
+  natural_color:
+    compositor: !!python/name:satpy.composites.SelfSharpenedRGB
+    prerequisites:
+    - name: C05
+      modifiers: [sunz_corrected]
+    - name: C03
+      modifiers: [sunz_corrected]
+    - name: C02
+      modifiers: [sunz_corrected]
+    high_resolution_band: blue
+    standard_name: natural_color
+
+  natural_color_raw:
+    compositor: !!python/name:satpy.composites.GenericCompositor
+    prerequisites:
+    - name: C05
+    - name: C03
+    - name: C02
+    standard_name: natural_color
+
+  overview:
+    compositor: !!python/name:satpy.composites.GenericCompositor
+    prerequisites:
+    - name: C02
+      modifiers: [sunz_corrected]
+    - name: C03
+      modifiers: [sunz_corrected]
+    - C14
+    standard_name: overview
+
+  overview_raw:
+    compositor: !!python/name:satpy.composites.GenericCompositor
+    prerequisites:
+    - C02
+    - C03
+    - C14
+    standard_name: overview
+
+  airmass:
+    compositor: !!python/name:satpy.composites.GenericCompositor
+    prerequisites:
+    - compositor: !!python/name:satpy.composites.DifferenceCompositor
+      prerequisites:
+      - name: C08
+      - name: C10
+    - compositor: !!python/name:satpy.composites.DifferenceCompositor
+      prerequisites:
+        - name: C12
+        - name: C13
+    - name: C08
+    standard_name: airmass
