@@ -57,7 +57,6 @@ try:
 except ImportError:
     sun_zenith_angle = None
 
-
 LOG = logging.getLogger(__name__)
 
 
@@ -80,19 +79,6 @@ class CompositorLoader(object):
         self.modifiers = {}
         self.compositors = {}
         self.ppp_config_dir = ppp_config_dir
-
-    def load_sensor_composites(self, sensor_name):
-        """Load all compositor configs for the provided sensor."""
-        config_filename = sensor_name + ".yaml"
-        LOG.debug("Looking for composites config file %s", config_filename)
-        composite_configs = config_search_paths(
-            os.path.join("composites", config_filename),
-            self.ppp_config_dir, check_exists=True)
-        if not composite_configs:
-            LOG.debug("No composite config found called {}".format(
-                config_filename))
-            return
-        self._load_config(composite_configs)
 
     def get_compositor(self, key, sensor_names):
         for sensor_name in sensor_names:
@@ -141,20 +127,36 @@ class CompositorLoader(object):
                 mods[sensor_name] = self.modifiers[sensor_name].copy()
         return comps, mods
 
-    def _load_config(self, composite_configs, **kwargs):
+    def load_sensor_composites(self, sensor_name):
+        """Load all compositor configs for the provided sensor."""
+        LOG.debug("Looking for all composite config files")
+        composite_configs = config_search_paths(
+            os.path.join("composites", "*.yaml"), self.ppp_config_dir,
+            glob=True, check_exists=False)
+        if not composite_configs:
+            LOG.debug("No composite config found.")
+            return
+        self._load_config(sensor_name, composite_configs)
+
+    def _load_config(self, sensor_name, composite_configs, **kwargs):
         if not isinstance(composite_configs, (list, tuple)):
             composite_configs = [composite_configs]
 
         conf = {}
         for composite_config in composite_configs:
             with open(composite_config) as conf_file:
-                conf = recursive_dict_update(conf, yaml.load(conf_file, Loader=UnsafeLoader))
-        try:
-            sensor_name = conf['sensor_name']
-        except KeyError:
-            LOG.debug('No "sensor_name" tag found in %s, skipping.',
-                      composite_config)
-            return
+                single_conf = yaml.load(conf_file, Loader=UnsafeLoader)
+                # Skip files that explicitly mention another sensor
+                if ('sensor_name' in single_conf and
+                        single_conf['sensor_name'] != sensor_name):
+                    continue
+                conf = recursive_dict_update(conf, single_conf)
+        # try:
+        #     sensor_name = conf['sensor_name']
+        # except KeyError:
+        #     LOG.debug('No "sensor_name" tag found in %s, skipping.',
+        #               composite_config)
+        #     return
 
         sensor_id = sensor_name.split('/')[-1]
         sensor_deps = sensor_name.split('/')[:-1]
