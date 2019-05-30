@@ -29,6 +29,7 @@ import os
 import time
 import warnings
 from weakref import WeakValueDictionary
+from pkg_resources import iter_entry_points
 
 import dask.array as da
 import numpy as np
@@ -58,6 +59,11 @@ except ImportError:
     sun_zenith_angle = None
 
 LOG = logging.getLogger(__name__)
+
+# Gather plugin configs
+PLUGIN_CONFIGS = []
+for entry_point in iter_entry_points(group='satpy.plugins'):
+    PLUGIN_CONFIGS += entry_point.load()['composites']
 
 
 class IncompatibleAreas(Exception):
@@ -133,6 +139,7 @@ class CompositorLoader(object):
         composite_configs = config_search_paths(
             os.path.join("composites", "*.yaml"), self.ppp_config_dir,
             glob=True, check_exists=False)
+        composite_configs += PLUGIN_CONFIGS
         if not composite_configs:
             LOG.debug("No composite config found.")
             return
