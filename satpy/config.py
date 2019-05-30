@@ -80,6 +80,14 @@ def config_search_paths(filename, *search_dirs, **kwargs):
               os.path.join(PACKAGE_CONFIG_PATH, filename)]
     paths = [os.path.abspath(path) for path in paths]
 
+    # This is used when attempting to grab everything at once
+    # Maybe I shouldn't use this function at all in that case, but
+    # it contains quite a bit of good infrastructure that I'd rather
+    # not need to maintain in two places.
+    if kwargs.get("glob", False):
+        paths = [fn for pth in paths for fn in glob.glob(pth)]
+        kwargs["check_exists"] = False  # Already done by using glob
+
     if kwargs.get("check_exists", True):
         paths = [x for x in paths if os.path.isfile(x)]
 
