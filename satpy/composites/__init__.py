@@ -141,6 +141,42 @@ class CompositorLoader(object):
                 mods[sensor_name] = self.modifiers[sensor_name].copy()
         return comps, mods
 
+    def _load_config(self, composite_configs, **kwargs):
+        if not isinstance(composite_configs, (list, tuple)):
+            composite_configs = [composite_configs]
+
+        conf = {}
+        for composite_config in composite_configs:
+            with open(composite_config) as conf_file:
+                conf = recursive_dict_update(conf, yaml.load(conf_file, Loader=UnsafeLoader))
+        try:
+            sensor_name = conf['sensor_name']
+        except KeyError:
+            LOG.debug('No "sensor_name" tag found in %s, skipping.',
+                      composite_config)
+            return
+
+        sensor_id = sensor_name.split('/')[-1]
+        sensor_deps = sensor_name.split('/')[:-1]
+
+        compositors = self.compositors.setdefault(sensor_id, DatasetDict())
+        modifiers = self.modifiers.setdefault(sensor_id, {})
+
+        for sensor_dep in reversed(sensor_deps):
+            if sensor_dep not in self.compositors or sensor_dep not in self.modifiers:
+                self.load_sensor_composites(sensor_dep)
+
+        if sensor_deps:
+            compositors.update(self.compositors[sensor_deps[-1]])
+            modifiers.update(self.modifiers[sensor_deps[-1]])
+
+        for composite_type in ['modifiers', 'composites']:
+            if composite_type not in conf:
+                continue
+            for composite_name in conf[composite_type]:
+                self._process_composite_config(composite_name, conf,
+                                               composite_type, sensor_id, composite_config, **kwargs)
+
     def _process_composite_config(self, composite_name, conf,
                                   composite_type, sensor_id, composite_config, **kwargs):
 
@@ -189,42 +225,6 @@ class CompositorLoader(object):
             compositors[key] = comp
         elif composite_type == 'modifiers':
             modifiers[composite_name] = loader, options
-
-    def _load_config(self, composite_configs, **kwargs):
-        if not isinstance(composite_configs, (list, tuple)):
-            composite_configs = [composite_configs]
-
-        conf = {}
-        for composite_config in composite_configs:
-            with open(composite_config) as conf_file:
-                conf = recursive_dict_update(conf, yaml.load(conf_file, Loader=UnsafeLoader))
-        try:
-            sensor_name = conf['sensor_name']
-        except KeyError:
-            LOG.debug('No "sensor_name" tag found in %s, skipping.',
-                      composite_config)
-            return
-
-        sensor_id = sensor_name.split('/')[-1]
-        sensor_deps = sensor_name.split('/')[:-1]
-
-        compositors = self.compositors.setdefault(sensor_id, DatasetDict())
-        modifiers = self.modifiers.setdefault(sensor_id, {})
-
-        for sensor_dep in reversed(sensor_deps):
-            if sensor_dep not in self.compositors or sensor_dep not in self.modifiers:
-                self.load_sensor_composites(sensor_dep)
-
-        if sensor_deps:
-            compositors.update(self.compositors[sensor_deps[-1]])
-            modifiers.update(self.modifiers[sensor_deps[-1]])
-
-        for composite_type in ['modifiers', 'composites']:
-            if composite_type not in conf:
-                continue
-            for composite_name in conf[composite_type]:
-                self._process_composite_config(composite_name, conf,
-                                               composite_type, sensor_id, composite_config, **kwargs)
 
 
 def check_times(projectables):
