@@ -1,4 +1,4 @@
-sensor_name: visir/virr
+sensor_name: virr
 
 modifiers:
   sunz_corrected:

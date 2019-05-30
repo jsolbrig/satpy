@@ -1,4 +1,4 @@
-sensor_name: visir/modis
+sensor_name: modis
 modifiers:
   rayleigh_corrected_crefl:
     compositor: !!python/name:satpy.composites.viirs.ReflectanceCorrector

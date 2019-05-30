@@ -1,4 +1,4 @@
-sensor_name: visir/slstr
+sensor_name: slstr
 
 composites:
   overview:

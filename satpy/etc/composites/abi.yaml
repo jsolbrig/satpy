@@ -1,4 +1,4 @@
-sensor_name: visir/abi
+sensor_name: abi
 
 modifiers:
   rayleigh_corrected_crefl:
